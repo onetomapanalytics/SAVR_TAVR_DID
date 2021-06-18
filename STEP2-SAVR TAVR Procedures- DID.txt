@@ -1,0 +1,183 @@
+STEP 2 
+Code for Data Prep for Procedures and DID Analysis 
+All the Individual yearly files were appended/stacked to form a master file 2010-2019 and then analysis was performed
+
+
+*********************************************************************
+
+use "file path 2010 Data"
+
+drop POA1 POA2 POA3 POA4 POA5 POA6 POA7 POA8 POA9 POA10 POA11 POA12 POA13 POA14 POA15 POA16 POA17 POA18 POA19 POA20 POA21 POA22 POA23 POA24 POA25 POA26 POA27 POA28 POA29 POA30 POA_EXT_IN POA_EXT__A POA_EXT__B DAYS_PROC1 DAYS_PROC2 DAYS_PROC3 DAYS_PROC4 DAYS_PROC5 DAYS_PROC6 DAYS_PROC7 DAYS_PROC8 DAYS_PROC9 DAYS_PRO_A DAYS_PRO_B DAYS_PRO_C DAYS_PRO_D DAYS_PRO_E DAYS_PRO_F DAYS_PRO_G DAYS_PRO_H DAYS_PRO_I DAYS_PRO_J DAYS_PRO_K DAYS_PRO_L DAYS_PRO_M DAYS_PRO_N DAYS_PRO_O DAYS_PRO_P DAYS_PRO_Q DAYS_PRO_R DAYS_PRO_S DAYS_PRO_T DAYS_PRO_U CONDTN
+
+tab tvar_savr 
+
+gen CCIcat = . 
+replace CCIcat = 0 if  CCI == 0
+replace CCIcat = 1 if  CCI == 1
+replace CCIcat = 2 if  CCI >= 2 
+
+save "file path", replace 
+
+*********************************************************************
+
+Reading the data from above file 
+
+use "file path 2010 Data"
+append "file path 2011 Data"
+append "file path 2012 Data"
+append "file path 2013 Data"
+append "file path 2014 Data"
+append "file path 2015 Data"
+append "file path 2016 Data"
+append "file path 2017 Data"
+append "file path 2018 Data"
+append "file path 2019 Data"
+
+drop  POA_ECMORB1 POA_ECMORB2 POA_ECMORB3 DAYS_PROC10 DAYS_PROC11 DAYS_PROC12 DAYS_PROC13 DAYS_PROC14 DAYS_PROC15 DAYS_PROC16 DAYS_PROC17 DAYS_PROC18 DAYS_PROC19 DAYS_PROC20 DAYS_PROC21 DAYS_PROC22 DAYS_PROC23 DAYS_PROC24 DAYS_PROC25 DAYS_PROC26 DAYS_PROC27 DAYS_PROC28 DAYS_PROC29 DAYS_PROC30
+
+drop ECODE1 ECODE2 ECODE3
+
+drop POA_PRIN_DIAG ATTEN_PHYID ATTEN_PHYNPI OPER_PHYNPI OTHOPER_PHYID OTHOPER_PHYNPI COMPREHABC CONDTN COMPREHABCHGS
+
+save "file path", replace 
+
+*********************************************************************
+
+use "file path"
+
+rename tvar_savr tavr_savr
+
+tab tavr_savr
+
+replace tavr_savr = 0 if tavr_savr == 2
+
+tab YEAR
+
+codebook  MCARE_NBR
+
+tab tavr_savr
+
+tab YEAR tavr_savr
+
+sort MCARE_NBR YEAR
+* the first obs is always an index
+by MCARE_NBR YEAR: gen IDX = _n == 1
+
+by MCARE_NBR YEAR: gen IDX2 = _n 
+
+*******************************************************************************
+* ADDING THE TOTAL CASES FOR OPEN PROCEDURES-COL
+bysort MCARE_NBR YEAR: egen Tot_SAVR = sum(tavr_savr==0) 
+
+* ADDING THE TOTAL CASES FOR ROBOTIC PROCEDURES
+bysort MCARE_NBR YEAR: egen Tot_TAVR = sum(tavr_savr==1) 
+
+* ADDING THE TOTAL CASES FOR ALL PROCEDURES
+bysort MCARE_NBR YEAR: egen Tot_PR = sum(tavr_savr == 0 | tavr_savr == 1) 
+
+order MCARE_NBR IDX Tot_SAVR Tot_TAVR Tot_PR YEAR, first
+save "file path", replace 
+
+*********************************************************************
+
+use "file path"
+
+
+keep if IDX == 1
+
+* the first obs is always an index
+by MCARE_NBR : gen IdX = _n == 1
+by MCARE_NBR : gen Idx2 = _n 
+
+tab Idx2
+
+
+foreach v of var Tot_TAVR{
+gen Robot = 1 if `v' != 0 & IdX == 1 
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 2 & Robot[_n-1] != 1 
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 3 & Robot[_n-1] != 1 & Robot[_n-2] != 1
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 4 & Robot[_n-1] != 1 & Robot[_n-2] != 1 & Robot[_n-3] != 1
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 5 & Robot[_n-1] != 1 & Robot[_n-2] != 1 & Robot[_n-3] != 1 & Robot[_n-4] != 1
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 6 & Robot[_n-1] != 1 & Robot[_n-2] != 1 & Robot[_n-3] != 1 & Robot[_n-4] != 1 & Robot[_n-5] != 1
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 7 & Robot[_n-1] != 1 & Robot[_n-2] != 1 & Robot[_n-3] != 1 & Robot[_n-4] != 1 & Robot[_n-5] != 1 & Robot[_n-6] != 1
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 8 & Robot[_n-1] != 1 & Robot[_n-2] != 1 & Robot[_n-3] != 1 & Robot[_n-4] != 1 & Robot[_n-5] != 1 & Robot[_n-6] != 1 & Robot[_n-7] != 1
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 9 & Robot[_n-1] != 1 & Robot[_n-2] != 1 & Robot[_n-3] != 1 & Robot[_n-4] != 1 & Robot[_n-5] != 1 & Robot[_n-6] != 1 & Robot[_n-7] != 1 & Robot[_n-8] != 1
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 10 & Robot[_n-1] != 1 & Robot[_n-2] != 1 & Robot[_n-3] != 1 & Robot[_n-4] != 1 & Robot[_n-5] != 1 & Robot[_n-6] != 1 & Robot[_n-7] != 1 & Robot[_n-8] != 1 & Robot[_n-9] != 1
+}
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 11 & Robot[_n-1] != 1 & Robot[_n-2] != 1 & Robot[_n-3] != 1 & Robot[_n-4] != 1 & Robot[_n-5] != 1 & Robot[_n-6] != 1 & Robot[_n-7] != 1 & Robot[_n-8] != 1 & Robot[_n-9] != 1 & Robot[_n-10] != 1
+} 
+foreach v of var Tot_TAVR{
+replace Robot = 1 if `v' != 0 & Idx2 == 12 & Robot[_n-1] != 1 & Robot[_n-2] != 1 & Robot[_n-3] != 1 & Robot[_n-4] != 1 & Robot[_n-5] != 1 & Robot[_n-6] != 1 &  Robot[_n-7] != 1 & Robot[_n-8] != 1 & Robot[_n-9] != 1 & Robot[_n-10] != 1 & Robot[_n-11] != 1
+} 
+
+gen idx_rob = Robot
+
+** to Run the second part of the code highlighting the non robotic hospital you have to stop at the second last count of Idx2, which over here is 9
+** so I did not run the last part of code with Robot[_n+10] with 
+
+by MCARE_NBR : replace Robot = 0 if (Tot_TAVR ==0 & IdX == 1 & Robot != 1)  
+by MCARE_NBR : replace Robot = . if (Robot == 0 & IdX == 1 & Robot[_n+1] == 1 & IdX != 0 )  
+by MCARE_NBR : replace Robot = . if (Robot == 0 & IdX == 1 & Robot[_n+1] == . & IdX != 0 & Robot[_n+2] == 1 & IdX != 0 )  
+by MCARE_NBR : replace Robot = . if (Robot == 0 & IdX == 1 & Robot[_n+1] == . & IdX != 0 & Robot[_n+2] == . & IdX != 0 & Robot[_n+3] == 1 & IdX != 0  )  
+by MCARE_NBR : replace Robot = . if (Robot == 0 & IdX == 1 & Robot[_n+1] == . & IdX != 0 & Robot[_n+2] == . & IdX != 0 & Robot[_n+3] == . & IdX != 0 & Robot[_n+4] == 1 & IdX != 0   )  
+
+by MCARE_NBR : replace Robot = . if (Robot == 0 & IdX == 1 & Robot[_n+1] == . & IdX != 0 & Robot[_n+2] == . & IdX != 0 & Robot[_n+3] == . & IdX != 0 & Robot[_n+4] == . & IdX != 0 & Robot[_n+5] == 1 & IdX != 0   )  
+
+
+by MCARE_NBR : replace Robot = . if (Robot == 0 & IdX == 1 & Robot[_n+1] == . & IdX != 0 & Robot[_n+2] == . & IdX != 0 & Robot[_n+3] == . & IdX != 0 & Robot[_n+4] == . & IdX != 0 & Robot[_n+5] == . & IdX != 0 & Robot[_n+6] == 1 & IdX != 0    )  
+
+
+by MCARE_NBR : replace Robot = . if (Robot == 0 & IdX == 1 & Robot[_n+1] == . & IdX != 0 & Robot[_n+2] == . & IdX != 0 & Robot[_n+3] == . & IdX != 0 & Robot[_n+4] == . & IdX != 0 & Robot[_n+5] == . & IdX != 0 & Robot[_n+6] == . & IdX != 0  & Robot[_n+7] == 1 & IdX != 0   )  
+
+
+by MCARE_NBR : replace Robot = . if (Robot == 0 & IdX == 1 & Robot[_n+1] == . & IdX != 0 & Robot[_n+2] == . & IdX != 0 & Robot[_n+3] == . & IdX != 0 & Robot[_n+4] == . & IdX != 0 & Robot[_n+5] == . & IdX != 0 & Robot[_n+6] == . & IdX != 0  & Robot[_n+7] == . & IdX != 0  & Robot[_n+8] == 1 & IdX != 0   )  
+
+by MCARE_NBR : replace Robot = . if (Robot == 0 & IdX == 1 & Robot[_n+1] == . & IdX != 0 & Robot[_n+2] == . & IdX != 0 & Robot[_n+3] == . & IdX != 0 & Robot[_n+4] == . & IdX != 0 & Robot[_n+5] == . & IdX != 0 & Robot[_n+6] == . & IdX != 0  & Robot[_n+7] == . & IdX != 0  & Robot[_n+8] == . & IdX != 0  & Robot[_n+9] == 1 & IdX != 0  )  
+
+
+
+replace idx_rob = Robot if Robot == 0 
+
+tab Robot
+tab idx_rob
+
+codebook MCARE_NBR if idx_rob == 1
+codebook MCARE_NBR if idx_rob == 0
+
+replace Robot= 0 if Robot == . 
+
+tab Robot
+
+
+gen time = 1 if Robot == 1
+replace time = 0 if time == .
+
+gen did = (time*Robot)
+
+replace MOD_CODE = "CL01" if MOD_CODE == "CL00"
+
+tab MOD_CODE if idx_rob == 0 | idx_rob== 1
+
+tab MOD_CODE if idx_rob== 0
+tab MOD_CODE if idx_rob== 1
+
+poisson Tot_PR did time Robot , irr

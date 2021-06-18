@@ -1,0 +1,52 @@
+STEP 1 
+Code for Basic Data cleaning and Data Prep to capture SAVR and TAVR Procedures 
+Code was repeated on all the Individual yearly files 2010-2019
+
+*********************************************************************
+
+use "file path 2010 Data"
+
+
+drop _merge
+
+rename *, upper  
+
+codebook MCARE_NBR FACLNBR
+
+mdesc MCARE_NBR FACLNBR
+
+drop if AGE<16
+drop if AGE==.
+drop if AGE==0
+drop if AGE==777
+drop if AGE==999
+
+
+replace PRINDIAG = subinstr(PRINDIAG, ".", "",.)
+
+replace PRINPROC = subinstr(PRINPROC, ".", "",.)
+
+order PRINPROC OTHPROC1 OTHPROC2 OTHPROC3 OTHPROC4 OTHPROC5 OTHPROC6 OTHPROC7 OTHPROC8 OTHPROC9 OTHPROC10 OTHPROC11 OTHPROC12 OTHPROC13 OTHPROC14 OTHPROC15 OTHPROC16 OTHPROC17 OTHPROC18 OTHPROC19 OTHPROC20 OTHPROC21 OTHPROC22 OTHPROC23 OTHPROC24 OTHPROC25 OTHPROC26 OTHPROC27 OTHPROC28 OTHPROC29 OTHPROC30, first 
+	
+isid SYS_RECID, sort
+
+************************************************************************************
+gen tvar_savr = . 
+
+foreach v of var PRINPROC{
+
+replace tvar_savr = 1 if `v' == "02RF37H" | `v' ==  "02RF37Z" | `v' ==  "02RF38H" | `v' ==  "02RF3JH" | `v' ==  "02RF3JZ" | `v' ==  "02RF3KH" | `v' ==  "02RF3KZ" 
+}
+
+foreach v of var PRINPROC{
+
+replace tvar_savr = 2 if `v'=="02RF07Z" | `v' ==  "02RF08Z" | `v' ==  "02RF0KZ" | `v' ==  "02RF47Z" | `v' ==  "02RF48Z" | `v' ==  "02RF4KZ" | `v' ==  "X2RF032" | `v' ==  "X2RF432" 
+ 
+}
+
+
+tab tvar_savr 
+
+drop if tvar_savr == .
+
+save "file path", replace 

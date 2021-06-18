@@ -1,0 +1,146 @@
+STEP 3 
+
+Code for All the summary statisics and univariate analysis (this was repeated on the unmatched and matched Data)
+
+*********************************************************************
+use "file path"
+
+codebook MCARE_NBR
+
+tab tavr_savr 
+
+tab DISCHSTAT 
+
+tab ADMSRC 
+
+****************************************************************************************
+summarize TCHGS 
+summarize TCHGS if tavr_savr == 0
+summarize TCHGS if tavr_savr == 1
+
+summarize OPRMCHGS 
+summarize OPRMCHGS if tavr_savr == 0
+summarize OPRMCHGS if tavr_savr == 1
+
+summarize MEDCHGS 
+summarize MEDCHGS if tavr_savr == 0
+summarize MEDCHGS if tavr_savr == 1
+
+summarize ANESCHGS 
+summarize ANESCHGS if tavr_savr == 0
+summarize ANESCHGS if tavr_savr == 1
+
+summarize RECOVCHGS 
+summarize RECOVCHGS if tavr_savr == 0
+summarize RECOVCHGS if tavr_savr == 1
+
+summarize ROOMCHGS 
+summarize ROOMCHGS if tavr_savr == 0
+summarize ROOMCHGS if tavr_savr == 1
+
+*********************************************************************************
+
+mdesc SEX AGE RACE ETHNICITY PAYER CCIcat ADM_PRIOR
+
+tab AGE 
+
+summarize AGE
+
+gen Age1 = 1 if AGE <=40
+replace Age1 = 2 if AGE >=41 & AGE <=50
+replace Age1 = 3 if AGE >= 51 & AGE <=70
+replace Age1 = 4 if AGE >= 71
+
+tab Age1
+rename Age1 Age_Cat
+
+*********************************************************************************
+tab SEX tavr_savr, row col chi2
+
+tab Age_Cat tavr_savr, row col chi2
+
+tab RACE tavr_savr, row col chi2
+
+tab ETHNICITY tavr_savr, row col chi2
+
+tab PAYER tavr_savr, row col chi2
+
+tab CCIcat tavr_savr, row col chi2
+
+tab ADM_PRIOR tavr_savr, row col chi2
+
+tab ADMSRC tavr_savr, row col chi2
+
+tab DISCHSTAT tavr_savr, row col chi2
+
+
+*All Chi square comparisons are significant 
+
+*********************************************************************************
+tab SEX tavr_savr, col
+
+tab Age_Cat tavr_savr, col 
+
+tab RACE tavr_savr, col 
+
+tab ETHNICITY tavr_savr, col 
+
+tab PAYER tavr_savr, col 
+
+tab CCIcat tavr_savr, col 
+
+tab ADM_PRIOR tavr_savr, col 
+
+tab ADMSRC tavr_savr, col 
+
+tab DISCHSTAT tavr_savr, col 
+
+tab tavr_savr if DISCHSTAT == "20"
+
+
+********************************************************************************
+summarize LOSDAYS 
+summarize LOSDAYS if tavr_savr == 0
+summarize LOSDAYS if tavr_savr == 1
+
+********************************************************************************
+summarize TCHGS 
+summarize TCHGS if tavr_savr == 0
+summarize TCHGS if tavr_savr == 1
+
+summarize OPRMCHGS 
+summarize OPRMCHGS if tavr_savr == 0
+summarize OPRMCHGS if tavr_savr == 1
+
+summarize MEDCHGS 
+summarize MEDCHGS if tavr_savr == 0
+summarize MEDCHGS if tavr_savr == 1
+
+summarize ANESCHGS 
+summarize ANESCHGS if tavr_savr == 0
+summarize ANESCHGS if tavr_savr == 1
+
+summarize RECOVCHGS 
+summarize RECOVCHGS if tavr_savr == 0
+summarize RECOVCHGS if tavr_savr == 1
+
+summarize ROOMCHGS 
+summarize ROOMCHGS if tavr_savr == 0
+summarize ROOMCHGS if tavr_savr == 1
+
+********************************************************************************
+R Code for  Descriptives T-Tests
+
+t.test(LOSDAYS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+t.test(TCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+t.test(OPRMCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+t.test(MEDCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+t.test(ANESCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+t.test(RECOVCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)
+
+t.test(ROOMCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = data1)

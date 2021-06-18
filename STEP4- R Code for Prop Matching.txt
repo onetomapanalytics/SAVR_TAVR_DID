@@ -1,0 +1,110 @@
+STEP 4 
+
+R Code for Propensity Matching And Descriptive Stats for matched Data
+
+*********************************************************************
+use "file path"
+
+codebook MCARE_NBR
+
+tab tavr_savr 
+
+tab DISCHSTAT 
+
+tab ADMSRC 
+
+****************************************************************************************
+
+
+#Reading the Dataset
+```{r}
+library(tableone)
+library(MatchIt)
+library(Matching)
+library(logitnorm)
+library(readstata13)
+
+data1<-read.dta13(file ="file path")
+
+# looking at the dimensions of the dataset
+dim(data1)
+
+# looking at any missing values in our dataset
+sum(is.na(data1))
+
+# Converting all the variables of the dataset into categorical variables and numeric types
+data1$AGE <- as.numeric(data1$AGE)
+
+data1[c(2:8)] <- lapply(data1[,c(2:8)] , as.factor)
+# look at data structure
+str(data1[1:8])
+
+print(table(data1$tavr_savr))
+
+print(prop.table(table(data1$tavr_savr)))
+
+
+#covariates we will use (shorter list than you would use in practice)
+xvars<-c("AGE","SEX","CCIcat","RACE","ETHNICITY","ADM_PRIOR","ADMSRC")
+
+#look at a table 1 Pre Propensity Matching
+table1<- CreateTableOne(vars=xvars,strata="tavr_savr", data=data1, test=FALSE)
+## include standardized mean difference (SMD)
+print(table1,smd=TRUE)
+```
+#propensity score matching
+```{r}
+#fit a propensity score model. logistic regression
+set.seed(1123)
+psmodel<-glm(tavr_savr ~ AGE+CCIcat+SEX+RACE+ETHNICITY+ADM_PRIOR+ADMSRC,
+    family=binomial(),data=data1)
+
+#show coefficients Summary☺
+summary(psmodel)
+
+#create propensity score
+pscore<-psmodel$fitted.values
+```
+#do greedy matching on logit(PS) using Match without a caliper and Without Replacement
+```{r}
+library(Matching)
+set.seed(1223)
+psmatch<-Match(Tr=data1$tavr_savr == "1",M=1,X=logit(pscore),replace=FALSE)
+
+matched<-data1[unlist(psmatch[c("index.treated","index.control")]), ]
+
+library(foreign)
+save.dta13(matched,file = "file path")
+
+print(table(matched$tavr_savr))
+
+print(prop.table(table(matched$tavr_savr)))
+
+#get standardized differences
+matchedtab1<-CreateTableOne(vars=xvars,strata ="tavr_savr",data=matched, test = FALSE)
+print(matchedtab1, smd = TRUE)
+
+
+```
+
+
+#Descriptives T-Tests
+```{r}
+
+t.test(LOSDAYS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = matched)
+
+t.test(TCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = matched)
+
+t.test(OPRMCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = matched)
+
+t.test(MEDCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = matched)
+
+t.test(ANESCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = matched)
+
+t.test(RECOVCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = matched)
+
+t.test(ROOMCHGS~tavr_savr, mu=0, alt="two.sided", conf=0.95, var.eq=F, paired=F, data = matched)
+
+
+```
+
